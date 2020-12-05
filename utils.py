@@ -1,9 +1,14 @@
 import xmltodict
 import re
 import os
+from nltk.corpus import stopwords
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
 
-
+##################################
 #Functions for reading EHR files - Ross Marino
+#################
+
 def open_ehr(path):
     with open(path, 'r') as file:
         doc=file.read()
@@ -23,7 +28,15 @@ def clean_text(xml_txt):
     new_txt = re.sub("[\s\W]{4,}|\_+|\\n|\\t", " ", xml_txt)
     # clean up residual extra non-alphanumeric chars
     new_txt = re.sub("\W{2,}", " ", new_txt)
-    return new_txt.lower()
+    return new_txt
+
+def filter_criteria(all_records):
+    crit_out = ['ALCOHOL-ABUSE', 'DRUG-ABUSE', 'ENGLISH','HBA1C','KETO-1YR','MAKES-DECISIONS','MI-6MOS']
+    for num, record in all_records.items():
+        for crit in crit_out:
+            all_records[num]['tags'].pop(crit)
+    
+    return(all_records)
 
 def read_records(directory):
     records = {}
@@ -35,9 +48,56 @@ def read_records(directory):
             clean_main = clean_text(xml_txt)
             records[id_name] = {'tags':tags_dict,
                             'text':clean_main}
+    records = filter_criteria(records)
     return records
 
+##################################
+# Functions for removing stop words
+#################
+
+def make_bag(txt, stopw):
+    """Takes one text doc
+        tokenizes words on white space
+        makes a bag of words without stop words or numbers
+      Returns bag of words"""
+    bow = re.split('\s',txt.lower())
+    new_bow=[]
+    for word in bow:
+        if word not in stopw and len(word)>0 and not re.search('\d',word):
+            new_bow.append(word)
+    return(new_bow)
+
+def remove_stop_words(raw_corpus, doc_freq=0.75):
+    """ Takes in a list of all raw text
+    Returns list of raw text without stop words based on document frequency and TFIDF"""
+    vectorizer = TfidfVectorizer()
+    vectors = vectorizer.fit_transform([doc.lower() for doc in raw_corpus])
+    feature_names = vectorizer.get_feature_names()
+    dense = vectors.todense()
+    denselist = dense.tolist()
+    words_tfidf = pd.DataFrame(denselist, columns=feature_names)
+    
+    new_stopwords = dict.fromkeys(feature_names, 0)
+    for (word, data) in words_tfidf.iteritems():
+        for num in data.values:
+            if num > 0:
+                new_stopwords[word] +=1
+
+    new_sw = []
+    for word, count in new_stopwords.items():
+        if count > doc_freq*len(raw_corpus):
+            new_sw.append(word)
+    stopw = stopwords.words('english')
+    stopw = [*stopw, *new_sw]
+    text_nostop = []
+    for doc in raw_corpus:
+        doc_bag = make_bag(doc, stopw)
+        text_nostop.append(" ".join(doc_bag))  
+    return(text_nostop)
+
+##################################
 # Advanced Tokenizer - Anuj Anand
+#################
 def adv_tokenizer(doc, model, 
                   replace_entities=False, 
                   remove_stopwords=True, 
@@ -89,6 +149,10 @@ def adv_tokenizer(doc, model,
             t.lower() 
         tokens.append(t)   
     return tokens
+
+##################################
+# Criteria Label Encoder - Smruthi Ramesh 
+#################
 
 def encode_labels(label_dicts, unique_labels):
     '''given a list of dictionaries of the form {CRITERIA:met/not}, 
