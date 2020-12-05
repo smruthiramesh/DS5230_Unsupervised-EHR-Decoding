@@ -35,7 +35,6 @@ def filter_criteria(all_records):
     for num, record in all_records.items():
         for crit in crit_out:
             all_records[num]['tags'].pop(crit)
-    
     return(all_records)
 
 def read_records(directory):
@@ -165,7 +164,7 @@ def encode_labels(label_dicts, unique_labels):
     for record in label_dicts:
         record_list = []
         for criteria in record:
-            if record[criteria] == 'met':
+            if criteria in unique_labels and record[criteria] == 'met':
                 record_list.append(label_numbers[criteria])
         label_lists.append(record_list)
     return label_lists
