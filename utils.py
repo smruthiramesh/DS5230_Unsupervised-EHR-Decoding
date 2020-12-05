@@ -18,10 +18,12 @@ def create_tags_dict(xml_tags):
         tag_dict[name] = xml_tags[name]["@met"]
     return tag_dict
 
-def clean_txt(xml_txt):
-    new_txt = re.sub("\\n|\\t", " ", xml_txt)
-    new_txt = re.sub("[\s\W]{4,}|\_+", " ", new_txt)
-    return new_txt
+def clean_text(xml_txt):
+    # remove a lot of white space and non-alphanumeric chars
+    new_txt = re.sub("[\s\W]{4,}|\_+|\\n|\\t", " ", xml_txt)
+    # clean up residual extra non-alphanumeric chars
+    new_txt = re.sub("\W{2,}", " ", new_txt)
+    return new_txt.lower()
 
 def read_records(directory):
     records = {}
@@ -30,7 +32,7 @@ def read_records(directory):
             id_name = filename[0:3]
             xml_txt, xml_tags = open_ehr(os.path.join(directory,filename))
             tags_dict = create_tags_dict(xml_tags)
-            clean_main = clean_txt(xml_txt)
+            clean_main = clean_text(xml_txt)
             records[id_name] = {'tags':tags_dict,
                             'text':clean_main}
     return records
