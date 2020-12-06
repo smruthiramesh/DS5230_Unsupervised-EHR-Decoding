@@ -2,6 +2,7 @@
 #creates json files for train, dev1, dev2, test in data folder in home dir
 #requires train files to be in train folder in home dir
 #requires test files to be in test folder in home dir
+#requires data folder to be in home dir
 ############################################################################
 
 from sklearn.model_selection import train_test_split
