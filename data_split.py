@@ -33,12 +33,12 @@ train_list = [(k,v) for k,v in train_data.items()]
 test_list = [(k,v) for k,v in test_data.items()]
 
 #adding 20 files from gold standard test set to train
-test, train_extra = train_test_split(test_list, test_size=0.25)
+test, train_extra = train_test_split(test_list, test_size=0.25, random_state=42)
 train_list.extend(train_extra)
 
 #splitting train into 10% dev1 and 10% dev2
-train_1, dev2 = train_test_split(train_list, test_size=0.1)
-train, dev1 = train_test_split(train_1, test_size=0.1)
+train_1, dev2 = train_test_split(train_list, test_size=0.1,random_state=42)
+train, dev1 = train_test_split(train_1, test_size=0.1,random_state=42)
 
 #converting back to dicts
 train_dict = {k:v for k,v in train}
