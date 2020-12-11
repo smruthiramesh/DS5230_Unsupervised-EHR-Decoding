@@ -52,15 +52,16 @@ def process_text(text_dict,criteria):
     return X_train,y_train
 
 
-def word2vec(criteria, train_file, dev_file):  
+def word2vec(criteria, train_file, dev_file, dev_flag):  
     #loading train records
     with open(train_file,'r') as train:
         train_records = json.load(train)
-    #loading dev1 records
-    with open(dev_file,'r') as dev:
-        dev_records = json.load(dev)
-    #adding dev1 to train for word embeddings purpose
-    train_records.update(dev_records)    
+    if dev_flag:
+        #loading dev1 records
+        with open(dev_file,'r') as dev:
+            dev_records = json.load(dev)
+        #adding dev1 to train for word embeddings purpose
+        train_records.update(dev_records)    
     X_train, y_train = process_text(train_records,criteria)
     #training word vectors on dataset
     model = Word2Vec(X_train, min_count=5,size=100,workers=3, window=5, sg = 1)
@@ -71,4 +72,4 @@ def word2vec(criteria, train_file, dev_file):
 
 #narrowed down criteria
 criteria = ['ABDOMINAL', 'ADVANCED-CAD', 'ASP-FOR-MI', 'DIETSUPP-2MOS', 'CREATININE', 'MAJOR-DIABETES']
-embeddings = word2vec(criteria,'./data/train.txt','./data/dev.txt')
+embeddings = word2vec(criteria,'./data/train.txt','./data/dev.txt',True)
