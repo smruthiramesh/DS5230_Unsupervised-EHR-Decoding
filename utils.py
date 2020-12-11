@@ -3,6 +3,9 @@ import re
 import os
 from nltk.corpus import stopwords
 import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.manifold import TSNE
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 ##################################
@@ -75,7 +78,7 @@ def remove_stop_words(raw_corpus, doc_freq=0.75):
     dense = vectors.todense()
     denselist = dense.tolist()
     words_tfidf = pd.DataFrame(denselist, columns=feature_names)
-    
+
     new_stopwords = dict.fromkeys(feature_names, 0)
     for (word, data) in words_tfidf.iteritems():
         for num in data.values:
@@ -91,17 +94,17 @@ def remove_stop_words(raw_corpus, doc_freq=0.75):
     text_nostop = []
     for doc in raw_corpus:
         doc_bag = make_bag(doc, stopw)
-        text_nostop.append(" ".join(doc_bag))  
+        text_nostop.append(" ".join(doc_bag))
     return(text_nostop)
 
 ##################################
 # Advanced Tokenizer - Anuj Anand
 #################
-def adv_tokenizer(doc, model, 
-                  replace_entities=False, 
-                  remove_stopwords=True, 
-                  lowercase=True, 
-                  alpha_only=True, 
+def adv_tokenizer(doc, model,
+                  replace_entities=False,
+                  remove_stopwords=True,
+                  lowercase=True,
+                  alpha_only=True,
                   lemma=True):
     """Full tokenizer with flags for processing steps
     replace_entities: If True, replaces with entity type
@@ -113,8 +116,6 @@ def adv_tokenizer(doc, model,
     parsed = model(doc)
     # token collector
     tokens = []
-    # index pointer
-    i = 0
     # entity collector
     ent = ''
     for t in parsed:
@@ -145,17 +146,17 @@ def adv_tokenizer(doc, model,
         else:
             t = t.text
         if lowercase:
-            t.lower() 
-        tokens.append(t)   
+            t.lower()
+        tokens.append(t)
     return tokens
 
 ##################################
-# Criteria Label Encoder - Smruthi Ramesh 
+# Criteria Label Encoder - Smruthi Ramesh
 #################
 
 def encode_labels(label_dicts, unique_labels):
-    '''given a list of dictionaries of the form {CRITERIA:met/not}, 
-    this function returns a list for each dictionary 
+    '''given a list of dictionaries of the form {CRITERIA:met/not},
+    this function returns a list for each dictionary
     with the unique number associated w each criteria that is met'''
     label_lists = []
     label_numbers = {}
@@ -168,4 +169,32 @@ def encode_labels(label_dicts, unique_labels):
                 record_list.append(label_numbers[criteria])
         label_lists.append(record_list)
     return label_lists
-            
+
+
+##################################
+# t-SNE Features
+##################################
+
+def get_tsne_features(vectors:np.ndarray, seed=0)->np.ndarray:
+  # Initialise TSNE
+  tsne = TSNE(n_components=2, random_state=seed)
+  # Reduce to two dimensions
+  Y = tsne.fit_transform(vectors)
+  return Y
+
+def plot_embeddings(vectors:np.ndarray, emb_type:str, labels=None, fig_size=(10,8)):
+  plt.figure(figsize=fig_size)
+
+  # colors = ['red','green','blue', 'yellow', 'violet', 'slategrey']
+
+  Y = get_tsne_features(vectors)
+
+  # Plot seed words
+  #plt.scatter(Y[:, 0], Y[:, 1], c=labels, cmap=matplotlib.colors.ListedColormap(colors))
+  plt.scatter(Y[:, 0], Y[:, 1])
+
+  plt.xlabel('tSNE Component 1')
+  plt.ylabel('tSNE Component 2')
+  plt.title('t-SNE representation of '+emb_type+' vectors')
+
+  plt.show()
