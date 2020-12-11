@@ -7,6 +7,7 @@ from nltk.corpus import stopwords
 from nltk.stem.snowball import SnowballStemmer
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score,roc_auc_score, precision_recall_fscore_support
+from sklearn.preprocessing import MultiLabelBinarizer
 import json
 import matplotlib.pyplot as plt
 #loading stopwords
@@ -23,7 +24,7 @@ def tokenize(doc):
     return text_list
 
 #gets wv representation of a sentence
-def sent_to_wv(X):
+def sent_to_wv(X,model):
     X_new = []
     for record in X:
         sent_list = []
@@ -36,12 +37,12 @@ def sent_to_wv(X):
         X_new.append(sent_array)
     return X_new
 
-def process_text(text_dict,criteria)
-    train_text = [train_records[x]['text'] for x in text_dict]
-    train_tags = [train_records[x]['tags'] for x in text_dict]
+def process_text(text_dict,criteria):
+    train_text = [text_dict[x]['text'] for x in text_dict]
+    train_tags = [text_dict[x]['tags'] for x in text_dict]
 
     #encoding tags with unique labels 
-    train_labels,label_mappings = encode_labels(train_tags, criteria)
+    train_labels = encode_labels(train_tags, criteria)
 
     X_train = tokenize(train_text)
 
@@ -60,11 +61,11 @@ def word2vec(criteria, train_file, dev_file):
         dev_records = json.load(dev)
     #adding dev1 to train for word embeddings purpose
     train_records.update(dev_records)    
-    X_train, y_train = process_text(train_records)
+    X_train, y_train = process_text(train_records,criteria)
     #training word vectors on dataset
     model = Word2Vec(X_train, min_count=5,size=100,workers=3, window=5, sg = 1)
     #getting representation for train
-    X_train_word2vec = np.array(sent_to_wv(X_train))
+    X_train_word2vec = np.array(sent_to_wv(X_train,model))
     return X_train_word2vec
 
 
