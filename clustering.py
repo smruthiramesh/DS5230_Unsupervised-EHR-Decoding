@@ -20,11 +20,11 @@ cluster_colors = {
 ##################################
 # K-Means
 ##################################
-def kmeans_clustering(vectors: np.ndarray, n_comp:int=6,
-                      plot=False, fig_size=(10,8)):
+def kmeans_clustering(vectors: np.ndarray, method=None, n_comp:int=6,
+                      plot=True, fig_size=(10,8), save_fig=False):
 
   """
-  Obtain Kmeans model.
+  Obtain Kmeans clustering.
   To plot, set plot=True.
   """
 
@@ -47,18 +47,23 @@ def kmeans_clustering(vectors: np.ndarray, n_comp:int=6,
     km_colors = [cluster_colors[label] for label in labels]
     plt.scatter(tsne_features[:, 0], tsne_features[:, 1], c=km_colors)
     plt.title(
-        f"k-means: Silhouette: {sil_score}", fontdict={"fontsize": 12}
+        f"K-Means + {type}", fontdict={"fontsize": 12}
     )
+    plt.xlabel("t-SNE Component 1")
+    plt.ylabel("t-SNE Component 2")
 
-  return kmeans
+    if save_fig:
+      plt.savefig("kmeans_"+method+".jpg")
+
+  return (kmeans, sil_score)
 
 
 ##################################
 # GMM
 ##################################
 
-def gmm_clustering(vectors: np.ndarray, covariance_type:str='full',
-                   n_comp=6, plot=False, fig_size=(10,8)):
+def gmm_clustering(vectors: np.ndarray, method=None, covariance_type:str='full',
+                   n_comp=6, plot=True, fig_size=(10,8), save_fig=False):
   """
   Obtain GMM clustering.
   To plot, set plot=True.
@@ -80,7 +85,12 @@ def gmm_clustering(vectors: np.ndarray, covariance_type:str='full',
     gmm_colors = [cluster_colors[label] for label in labels]
     plt.scatter(tsne_features[:, 0], tsne_features[:, 1], c=gmm_colors)
     plt.title(
-        f"k-means: Silhouette: {sil_score}", fontdict={"fontsize": 12}
+        f"GMM+{type}", fontdict={"fontsize": 12}
     )
+    plt.xlabel("t-SNE Component 1")
+    plt.ylabel("t-SNE Component 2")
 
-  return gmm
+    if save_fig:
+      plt.savefig("gmm_"+method+".jpg")
+
+  return (gmm, sil_score)
