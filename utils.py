@@ -4,6 +4,7 @@ import os
 from nltk.corpus import stopwords
 import pandas as pd
 import numpy as np
+import pickle
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -175,17 +176,15 @@ def encode_labels(label_dicts, unique_labels):
 # t-SNE Features
 ##################################
 
-def get_tsne_features(vectors:np.ndarray, seed=0)->np.ndarray:
+def get_tsne_features(vectors:np.ndarray, n_comp=2, seed=0)->np.ndarray:
   # Initialise TSNE
-  tsne = TSNE(n_components=2, random_state=seed)
+  tsne = TSNE(n_components=n_comp, random_state=seed)
   # Reduce to two dimensions
   Y = tsne.fit_transform(vectors)
   return Y
 
-def plot_embeddings(vectors:np.ndarray, emb_type:str, labels=None, fig_size=(10,8)):
+def plot_embeddings(vectors:np.ndarray, method:str, labels=None, fig_size=(10,8)):
   plt.figure(figsize=fig_size)
-
-  # colors = ['red','green','blue', 'yellow', 'violet', 'slategrey']
 
   Y = get_tsne_features(vectors)
 
@@ -195,6 +194,46 @@ def plot_embeddings(vectors:np.ndarray, emb_type:str, labels=None, fig_size=(10,
 
   plt.xlabel('tSNE Component 1')
   plt.ylabel('tSNE Component 2')
-  plt.title('t-SNE representation of '+emb_type+' vectors')
+  plt.title('t-SNE representation of '+method+' vectors')
 
   plt.show()
+
+
+##################################
+# Miscellaneous
+##################################
+
+def save_pickle(file, variable):
+    """
+    Saves variable as a pickle file
+
+    Parameters
+    -----------
+    file: str
+          File name/path in which the variable is to be stored
+
+    variable: object
+              The variable to be stored in a file
+    """
+    if file.split('.')[-1] != "pkl":
+        file += ".pkl"
+
+    with open(file, 'wb') as f:
+        pickle.dump(variable, f)
+        print("Variable successfully saved in " + file)
+
+
+def open_pickle(file):
+    """
+    Returns the variable after reading it from a pickle file
+
+    Parameters
+    -----------
+    file: str
+          File name/path from which variable is to be loaded
+    """
+    if file.split('.')[-1] != "pkl":
+        file += ".pkl"
+
+    with open(file, 'rb') as f:
+        return pickle.load(f)
