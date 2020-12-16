@@ -1,7 +1,7 @@
 #simple word2vec model training on dataset
 
 import numpy as np
-from utils import read_records, adv_tokenizer, encode_labels
+from utils import read_records, encode_labels
 from gensim.models import Word2Vec
 from nltk.corpus import stopwords
 from nltk.stem.snowball import SnowballStemmer
@@ -10,6 +10,7 @@ from sklearn.metrics import accuracy_score,roc_auc_score, precision_recall_fscor
 from sklearn.preprocessing import MultiLabelBinarizer
 import json
 import matplotlib.pyplot as plt
+from clustering import *
 #loading stopwords
 stopwords = set(stopwords.words('english'))
 stemmer = SnowballStemmer("english")
@@ -48,11 +49,9 @@ def process_text(text_dict,criteria):
 
     mlb = MultiLabelBinarizer()
     y_train = mlb.fit_transform(train_labels)
+    return X_train, y_train, train_labels
 
-    return X_train,y_train
-
-
-def word2vec(criteria, train_file, dev_file, dev_flag):  
+def word2vec(criteria, train_file, dev_file, dev_flag,window=5, size=100, min_count=5):  
     #loading train records
     with open(train_file,'r') as train:
         train_records = json.load(train)
@@ -62,9 +61,9 @@ def word2vec(criteria, train_file, dev_file, dev_flag):
             dev_records = json.load(dev)
         #adding dev1 to train for word embeddings purpose
         train_records.update(dev_records)    
-    X_train, y_train = process_text(train_records,criteria)
+    X_train, y_train,train_labels = process_text(train_records,criteria)
     #training word vectors on dataset
-    model = Word2Vec(X_train, min_count=5,size=100,workers=3, window=5, sg = 1)
+    model = Word2Vec(sentences=X_train, min_count=min_count, size=size, window=window, workers=3, sg = 1)
     #getting representation for train
     X_train_word2vec = np.array(sent_to_wv(X_train,model))
     return X_train_word2vec
@@ -73,3 +72,4 @@ def word2vec(criteria, train_file, dev_file, dev_flag):
 #narrowed down criteria
 criteria = ['ABDOMINAL', 'ADVANCED-CAD', 'ASP-FOR-MI', 'DIETSUPP-2MOS', 'CREATININE', 'MAJOR-DIABETES']
 embeddings = word2vec(criteria,'./data/train.txt','./data/dev.txt',True)
+# print(embeddings.shape)
